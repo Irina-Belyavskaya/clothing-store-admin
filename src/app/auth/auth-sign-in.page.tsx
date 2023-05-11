@@ -19,11 +19,14 @@ import { SignInDto } from "./types/sign-in-dto.type";
 
 // ============== Icons ==============
 import LoginOutlinedIcon from "@mui/icons-material/LoginOutlined";
+import { getUsers } from "app/users/store/users.actions";
+import { useState } from "react";
 
 export default function AuthSignInPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const auth = useAuthSelector();
+  const [forbiddenError, setForbiddenError] = useState('');
   const color = "#0A5F38";
 
   const {
@@ -38,27 +41,36 @@ export default function AuthSignInPage() {
   });
 
   const handleSubmitForm = (data: FieldValues) => {
+    setForbiddenError('');
     const dto: SignInDto = {
       email: data.email,
       password: data.password,
     };
 
-    dispatch(signInUser({ dto })).then(({ meta }) => {
-      if (meta.requestStatus !== "rejected") {
-        reset();
-        navigate("/", { replace: true });
-      }
-    });
+    dispatch(signInUser({ dto }))
+      .then(({ meta }) => {
+        if (meta.requestStatus !== "rejected") {
+          dispatch(getUsers())
+            .then(({ meta }) => {
+              if (meta.requestStatus !== "rejected") {
+                reset();
+                navigate("/", { replace: true });
+              } else {
+                setForbiddenError('Forbidden');
+              }
+            })
+        }
+      });
   };
 
   return (
-    <Grid 
-      container 
-      sx={{ 
+    <Grid
+      container
+      sx={{
         height: "100vh",
         backgroundImage: `url(${'https://images.unsplash.com/photo-1485570661444-73b3f0ff9d2f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1785&q=80'})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center', 
+        backgroundPosition: 'center',
       }}
     >
       <Grid
@@ -91,9 +103,9 @@ export default function AuthSignInPage() {
           component="form"
           noValidate
           onSubmit={handleSubmit(handleSubmitForm)}
-          sx={{ 
+          sx={{
             mt: 1
-          }} 
+          }}
         >
           <Controller
             name="email"
@@ -144,7 +156,9 @@ export default function AuthSignInPage() {
           >
             Sign in
           </Button>
-          {auth.errors.token && <ErrorAlert title="Error" text={auth.errors.token} />}
+          {(auth.errors.token || forbiddenError) &&
+            <ErrorAlert title="Error" text={auth.errors.token || forbiddenError} />
+          }
         </Box>
       </Grid>
     </Grid>
