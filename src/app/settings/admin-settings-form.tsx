@@ -8,6 +8,7 @@ import {
     Typography,
     Link,
 } from '@mui/material';
+import { useState } from 'react';
 
 // ============ Redux =========================
 import { useAppDispatch } from 'hooks/redux';
@@ -22,38 +23,50 @@ import { yupResolver } from '@hookform/resolvers/yup';
 
 // ============ Components =========================
 import ErrorAlert from 'components/error-alert.component';
+import SuccessModalWindow from 'components/success-modal-window.component';
 
 const UserSettingsForm = () => {
     const dispatch = useAppDispatch();
     const settings = useUserSettingsSelector();
-    
+    const [open, setOpen] = useState(false);
+
+    const handleOpen = () => {
+        setOpen(true);
+    }
+
+    const handleClose = () => {
+        setOpen(false);
+    }
+
     const {
         handleSubmit,
         control,
         formState: { errors },
         reset
     } = useForm({
-        mode: 'all', 
+        mode: 'all',
         resolver: yupResolver(schemaUpdatePassword),
-        defaultValues: {currentPassword: '', newPassword: '', confirmPassword: ''}
+        defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' }
     });
 
     const handleSubmitForm = (data: FieldValues) => {
         const dto: UpdateUserPasswordDtoType = {
-            password: data.currentPassword, 
-            newPassword: data.newPassword, 
-            newPasswordConfirm: data.confirmPassword};
-        dispatch(updateUserPassword({dto}))
-            .then(({meta}) => {
+            password: data.currentPassword,
+            newPassword: data.newPassword,
+            newPasswordConfirm: data.confirmPassword
+        };
+        dispatch(updateUserPassword({ dto }))
+            .then(({ meta }) => {
                 if (meta.requestStatus !== 'rejected') {
                     reset();
+                    handleOpen();
                 }
             })
     }
 
     return (
         <>
-            <Grid container sx={{justifyContent: 'center'}}>
+            <Grid container sx={{ justifyContent: 'center' }}>
                 <CssBaseline />
                 <Grid
                     item
@@ -87,15 +100,15 @@ const UserSettingsForm = () => {
                                 control={control}
                                 render={({ field: { onChange, value } }) => (
                                     <TextField
-                                    helperText={errors.currentPassword ? `${errors.currentPassword.message}`: ''}
-                                    margin="normal"
-                                    label="Current Password"
-                                    fullWidth
-                                    id="currentPassword"
-                                    type='password'
-                                    value={value ? value : ''}
-                                    onChange={onChange}
-                                    error={errors.currentPassword ? true : false}
+                                        helperText={errors.currentPassword ? `${errors.currentPassword.message}` : ''}
+                                        margin="normal"
+                                        label="Current Password"
+                                        fullWidth
+                                        id="currentPassword"
+                                        type='password'
+                                        value={value ? value : ''}
+                                        onChange={onChange}
+                                        error={errors.currentPassword ? true : false}
                                     />
                                 )}
                             />
@@ -104,15 +117,15 @@ const UserSettingsForm = () => {
                                 control={control}
                                 render={({ field: { onChange, value } }) => (
                                     <TextField
-                                    helperText={errors.newPassword ? `${errors.newPassword.message}`: ''}
-                                    margin="normal"
-                                    label="New Password"
-                                    fullWidth
-                                    id="newPassword"
-                                    type='password'
-                                    value={value ? value : ''}
-                                    onChange={onChange}
-                                    error={errors.newPassword ? true : false}
+                                        helperText={errors.newPassword ? `${errors.newPassword.message}` : ''}
+                                        margin="normal"
+                                        label="New Password"
+                                        fullWidth
+                                        id="newPassword"
+                                        type='password'
+                                        value={value ? value : ''}
+                                        onChange={onChange}
+                                        error={errors.newPassword ? true : false}
                                     />
                                 )}
                             />
@@ -121,15 +134,15 @@ const UserSettingsForm = () => {
                                 control={control}
                                 render={({ field: { onChange, value } }) => (
                                     <TextField
-                                    helperText={errors.confirmPassword ? `${errors.confirmPassword.message}`: ''}
-                                    margin="normal"
-                                    label="Confirm Password"
-                                    fullWidth
-                                    id="confirmPassword"
-                                    type='password'
-                                    value={value ? value : ''}
-                                    onChange={onChange}
-                                    error={errors.confirmPassword ? true : false}
+                                        helperText={errors.confirmPassword ? `${errors.confirmPassword.message}` : ''}
+                                        margin="normal"
+                                        label="Confirm Password"
+                                        fullWidth
+                                        id="confirmPassword"
+                                        type='password'
+                                        value={value ? value : ''}
+                                        onChange={onChange}
+                                        error={errors.confirmPassword ? true : false}
                                     />
                                 )}
                             />
@@ -150,13 +163,18 @@ const UserSettingsForm = () => {
                             >
                                 Save
                             </Button>
-                            { settings.errors.userSettings && 
-                                <ErrorAlert title="Error" text={settings.errors.userSettings}/> 
+                            {settings.errors.userSettings &&
+                                <ErrorAlert title="Error" text={settings.errors.userSettings} />
                             }
                         </Box>
                     </Box>
                 </Grid>
             </Grid>
+            <SuccessModalWindow
+                text={'Password changed.'}
+                handleClose={handleClose}
+                isOpen={open}
+            />
         </>
     )
 }
